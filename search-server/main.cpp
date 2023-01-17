@@ -7,8 +7,14 @@
 #include <utility>
 #include <vector>
 
+<<<<<<< HEAD
 //main
 //main2
+=======
+//TestSearchServer
+//TestSearchServer2
+//TestSearchServer3
+>>>>>>> TestSearchServer
 
 using namespace std;
 
