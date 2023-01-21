@@ -8,6 +8,10 @@
 #include <vector>
 
 //main
+<<<<<<< HEAD
+=======
+//main2
+>>>>>>> parent of 35a97a6 (Merge branch 'TestSearchServer')
 
 using namespace std;
 
