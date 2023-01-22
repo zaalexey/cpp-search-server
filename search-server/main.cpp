@@ -393,8 +393,7 @@ void TestSortRelevance() {
     server.AddDocument(14, "blue cat in the city"s, DocumentStatus::ACTUAL, { 4, 3 });
     const auto found_docs = server.FindTopDocuments("blue cat"s);
     // релевантность документа с id = 14 поисковому запросу должна быть выше
-    ASSERT_EQUAL(found_docs[0].id, 14u);
-    ASSERT_EQUAL(found_docs[1].id, 23u);
+    ASSERT((found_docs[0].id == 14u) && (found_docs[0].relevance > found_docs[1].relevance));
 }
 
 // Тест рейтинга вычисления рейтинга документа
@@ -424,10 +423,25 @@ void TestSearchDocWithStatus() {
     SearchServer server;
     server.AddDocument(23, "cat in the city"s, DocumentStatus::ACTUAL, { 2, 3 });
     server.AddDocument(31, "dog in the city"s, DocumentStatus::BANNED, { 4, -1 });
-    const auto found_docs = server.FindTopDocuments("city"s, DocumentStatus::BANNED);
+    server.AddDocument(14, "rabbit in the city"s, DocumentStatus::REMOVED, { 3, 8 });
+    server.AddDocument(16, "bear in the city"s, DocumentStatus::IRRELEVANT, { 1, 5 });
 
+    const auto found_docs1 = server.FindTopDocuments("cat"s, DocumentStatus::ACTUAL);
+    // id документа должен быть 23
+    ASSERT(found_docs1[0].id == 23);
+
+    const auto found_docs2 = server.FindTopDocuments("dog"s, DocumentStatus::BANNED);
     // id документа должен быть 31
-    ASSERT(found_docs[0].id == 31);
+    ASSERT(found_docs2[0].id == 31);
+
+    const auto found_docs3 = server.FindTopDocuments("rabbit"s, DocumentStatus::REMOVED);
+    // id документа должен быть 14
+    ASSERT(found_docs3[0].id == 14);
+
+    const auto found_docs4 = server.FindTopDocuments("bear"s, DocumentStatus::IRRELEVANT);
+    // id документа должен быть 16
+    ASSERT(found_docs4[0].id == 16);
+
 }
 
 // Тест Корректное вычисление релевантности найденных документов.
