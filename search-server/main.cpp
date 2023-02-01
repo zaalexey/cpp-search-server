@@ -28,14 +28,27 @@ int ReadLineWithNumber() {
     return result;
 }
 
+static bool IsValidWord(const string& word) {
+    // A valid word must not contain special characters
+    return none_of(word.begin(), word.end(), [](char c) {
+        return c >= '\0' && c < ' ';
+        });
+}
+
 vector<string> SplitIntoWords(const string& text) {
     vector<string> words;
     string word;
     for (const char c : text) {
         if (c == ' ') {
             if (!word.empty()) {
-                words.push_back(word);
-                word.clear();
+                if (IsValidWord(word)) {
+                    words.push_back(word);
+                    word.clear();
+                }
+                else {
+                    throw invalid_argument("invalid characters in the word");
+                }
+
             }
         }
         else {
@@ -43,11 +56,17 @@ vector<string> SplitIntoWords(const string& text) {
         }
     }
     if (!word.empty()) {
-        words.push_back(word);
+        if (IsValidWord(word)) {
+            words.push_back(word);
+        }
+        else {
+            throw invalid_argument("invalid characters in the word");
+        }
     }
 
     return words;
 }
+
 
 struct Document {
     Document() = default;
@@ -111,10 +130,6 @@ public:
             throw invalid_argument("document with the id of the previously added document");
         }
 
-        if (!IsValidWord(document)) {
-            throw invalid_argument("invalid characters in the text of the document");
-        }
-
         const vector<string> words = SplitIntoWordsNoStop(document);
         const double inv_word_count = 1.0 / words.size();
         for (const string& word : words) {
@@ -126,12 +141,6 @@ public:
     template <typename DocumentPredicate>
     vector<Document> FindTopDocuments(const string& raw_query,
         DocumentPredicate document_predicate) const {
-        if (!IsValidWord(raw_query)) {
-            throw invalid_argument("invalid characters in the raw_query");
-        }
-        if (!ParseQueryWordForMinus(raw_query)) {
-            throw invalid_argument("invalid minus word");
-        }
 
         const Query query = ParseQuery(raw_query);
         auto matched_documents = FindAllDocuments(query, document_predicate);
@@ -166,13 +175,6 @@ public:
     }
 
     tuple<vector<string>, DocumentStatus> MatchDocument(const string& raw_query, int document_id) const {
-        if (!IsValidWord(raw_query)) {
-            throw invalid_argument("invalid characters in the raw_query");
-        }
-        if (!ParseQueryWordForMinus(raw_query)) {
-            throw invalid_argument("invalid minus word");
-        }
-
         const Query query = ParseQuery(raw_query);
         vector<string> matched_words;
         for (const string& word : query.plus_words) {
@@ -246,6 +248,12 @@ private:
     QueryWord ParseQueryWord(string text) const {
         bool is_minus = false;
         // Word shouldn't be empty
+        if (text == "-"s) {
+            throw invalid_argument("invalid minus word");
+        }
+        if ((text.size() >= 2) && ((text[0] == '-') && (text[1] == '-'))) {
+            throw invalid_argument("invalid minus word");
+        }
         if (text[0] == '-') {
             is_minus = true;
             text = text.substr(1);
@@ -272,15 +280,6 @@ private:
             }
         }
         return query;
-    }
-
-    bool ParseQueryWordForMinus(const string& text) const {
-        for (const string& word : SplitIntoWords(text)) {
-            if ((word[1] == '-') || (word == "-"s)) {
-                return false;
-            }
-        }
-        return true;
     }
 
     // Existence required
@@ -322,10 +321,5 @@ private:
         return matched_documents;
     }
 
-    static bool IsValidWord(const string& word) {
-        // A valid word must not contain special characters
-        return none_of(word.begin(), word.end(), [](char c) {
-            return c >= '\0' && c < ' ';
-            });
-    }
+
 };
