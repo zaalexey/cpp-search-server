@@ -15,6 +15,7 @@
 using namespace std;
 
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
+const double ACCURACY = 1e-6;
 
 class SearchServer {
 public:
@@ -83,7 +84,7 @@ vector<Document> SearchServer::FindTopDocuments(const string& raw_query, Documen
     auto matched_documents = FindAllDocuments(query, document_predicate);
 
     sort(matched_documents.begin(), matched_documents.end(), [](const Document& lhs, const Document& rhs) {
-        if (std::abs(lhs.relevance - rhs.relevance) < 1e-6) {
+        if (std::abs(lhs.relevance - rhs.relevance) < ACCURACY) {
             return lhs.rating > rhs.rating;
         }
         else {
