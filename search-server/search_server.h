@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
+#include <numeric>
 
 #include "document.h"
 #include "string_processing.h"
