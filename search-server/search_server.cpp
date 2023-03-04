@@ -3,7 +3,7 @@
 
 SearchServer::SearchServer(const string& stop_words_text)
     : SearchServer(SplitIntoWords(stop_words_text))  // Invoke delegating constructor
-                                                     // from string container
+                                                        // from string container
 {
 }
 
@@ -16,9 +16,10 @@ void SearchServer::AddDocument(int document_id, const string& document, Document
     const double inv_word_count = 1.0 / words.size();
     for (const string& word : words) {
         word_to_document_freqs_[word][document_id] += inv_word_count;
+        document_to_word_freqs_[document_id][word] += inv_word_count;
     }
     documents_.emplace(document_id, DocumentData{ ComputeAverageRating(ratings), status });
-    document_ids_.push_back(document_id);
+    document_ids_.insert(document_id);
 }
 
 
@@ -37,7 +38,37 @@ int SearchServer::GetDocumentCount() const {
 }
 
 int SearchServer::GetDocumentId(int index) const {
-    return document_ids_.at(index);
+    if(document_ids_.count(index))
+        return *(document_ids_.find(index));
+}
+
+set<int>::const_iterator SearchServer::begin() {
+    return document_ids_.begin();
+}
+
+set<int>::const_iterator SearchServer::end() {
+    return document_ids_.end();
+}
+
+const map<string, double>& SearchServer::GetWordFrequencies(int document_id) const {
+    static map<string, double> word_frequencies = {};
+    for (auto [id, word_freq] : document_to_word_freqs_) {
+        if (document_to_word_freqs_.count(document_id))
+            return document_to_word_freqs_.at(document_id);
+        else
+            return word_frequencies;
+    }
+}
+
+void SearchServer::RemoveDocument(int document_id) {
+    for (auto [word, id_freq] : word_to_document_freqs_) {
+        if (id_freq.count(document_id) > 0)
+            word_to_document_freqs_.at(word).erase(document_id);
+    }
+
+    documents_.erase(document_id);
+    document_ids_.erase(document_id);
+    document_to_word_freqs_.erase(document_id);
 }
 
 tuple<vector<string>, DocumentStatus> SearchServer::MatchDocument(const string& raw_query, int document_id) const {
