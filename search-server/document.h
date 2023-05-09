@@ -27,4 +27,4 @@ enum class DocumentStatus {
 
 ostream& operator<<(ostream& out, const Document& document);
 void PrintDocument(const Document& document);
-void PrintMatchDocumentResult(int document_id, const vector<string>& words, DocumentStatus status);
+void PrintMatchDocumentResult(int document_id, const vector<string_view>& words, DocumentStatus status);
